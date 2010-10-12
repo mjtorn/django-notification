@@ -22,11 +22,12 @@ def feed_for_user(request):
 
 
 @login_required
-def notices(request):
+def notices(request, **kwargs):
     """
     The main notices index view.
     
     Template: :template:`notification/notices.html`
+    AJAX Template: :template:`notification/notices_ajax.html`
     
     Context:
     
@@ -34,9 +35,15 @@ def notices(request):
             A list of :model:`notification.Notice` objects that are not archived
             and to be displayed on the site.
     """
+    template_name = kwargs.get("template_name", "notification/notices.html")
+    if request.is_ajax():
+        template_name = kwargs.get(
+            "template_name_ajax",
+            "notification/notices_ajax.html")
+
     notices = Notice.objects.notices_for(request.user, on_site=True)
     
-    return render_to_response("notification/notices.html", {
+    return render_to_response(template_name, {
         "notices": notices,
     }, context_instance=RequestContext(request))
 
@@ -177,13 +184,18 @@ def delete(request, noticeid=None, next_page=None):
 
 
 @login_required
-def mark_all_seen(request):
+def mark_all_seen(request, success_url=None):
     """
     Mark all unseen notices for the requesting user as seen.  Returns a
     ``HttpResponseRedirect`` when complete. 
     """
     
+    if success_url is None:
+        success_url = reverse("notification_notices")
+    if request.GET.has_key("next"):
+        success_url = request.GET['next']
+
     for notice in Notice.objects.notices_for(request.user, unseen=True):
         notice.unseen = False
         notice.save()
-    return HttpResponseRedirect(reverse("notification_notices"))
+    return HttpResponseRedirect(success_url)
