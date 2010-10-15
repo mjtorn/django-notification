@@ -22,7 +22,9 @@ def feed_for_user(request):
 
 
 @login_required
-def notices(request, **kwargs):
+def notices(request,
+            template_name='notification/notices.html',
+            template_name_ajax='notification/notices_ajax.html'):
     """
     The main notices index view.
     
@@ -35,11 +37,8 @@ def notices(request, **kwargs):
             A list of :model:`notification.Notice` objects that are not archived
             and to be displayed on the site.
     """
-    template_name = kwargs.get("template_name", "notification/notices.html")
-    if request.is_ajax():
-        template_name = kwargs.get(
-            "template_name_ajax",
-            "notification/notices_ajax.html")
+    if(request.is_ajax()):
+        template_name = template_name_ajax
 
     notices = Notice.objects.notices_for(request.user, on_site=True)
     
@@ -47,9 +46,10 @@ def notices(request, **kwargs):
         "notices": notices,
     }, context_instance=RequestContext(request))
 
-
 @login_required
-def notice_settings(request):
+def notice_settings(request,
+                    template_name='notification/notice_settings.html',
+                    template_name_ajax='notification/notice_settings_ajax.html'):
     """
     The notice settings view.
     
@@ -68,7 +68,11 @@ def notice_settings(request):
             value is ``True`` or ``False`` depending on a ``request.POST``
             variable called ``form_label``, whose valid value is ``on``.
     """
+    if request.is_ajax():
+        template_name = template_name_ajax
+
     notice_types = NoticeType.objects.all()
+    print "notice_types count", notice_types.count()
     settings_table = []
     for notice_type in notice_types:
         settings_row = []
@@ -92,7 +96,7 @@ def notice_settings(request):
         "rows": settings_table,
     }
     
-    return render_to_response("notification/notice_settings.html", {
+    return render_to_response(template_name, {
         "notice_types": notice_types,
         "notice_settings": notice_settings,
     }, context_instance=RequestContext(request))
