@@ -17,7 +17,7 @@
   </p>
   {% endif %}
   
-  <form method="POST" action="{% url notification_notice_settings %}">
+  <form method="POST" action="{% url notification_notice_settings %}?next={% url messages %}">
     <table class="notice_settings">
       <tr>
         <th>{% trans "Notification Type" %}</th>

@@ -4,6 +4,7 @@ from django.http import HttpResponseRedirect, Http404
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from django.contrib.syndication.views import feed
+from django.contrib import messages
 
 from notification.models import *
 from notification.decorators import basic_auth_required, simple_basic_auth_callback
@@ -72,7 +73,6 @@ def notice_settings(request,
         template_name = template_name_ajax
 
     notice_types = NoticeType.objects.all()
-    print "notice_types count", notice_types.count()
     settings_table = []
     for notice_type in notice_types:
         settings_row = []
@@ -91,6 +91,11 @@ def notice_settings(request,
             settings_row.append((form_label, setting.send))
         settings_table.append({"notice_type": notice_type, "cells": settings_row})
     
+    if(request.method == "POST" and
+       request.REQUEST.has_key('next')):
+        messages.add_message(request, messages.INFO, "Your notification settings have been saved.")
+        return HttpResponseRedirect(request.REQUEST['next'])
+
     notice_settings = {
         "column_headers": [medium_display for medium_id, medium_display in NOTICE_MEDIA],
         "rows": settings_table,
