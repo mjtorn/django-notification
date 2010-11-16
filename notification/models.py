@@ -264,11 +264,14 @@ def send_now(users, label, extra_context=None, on_site=True, sender=None):
     notice_type = NoticeType.objects.get(label=label)
 
     protocol = getattr(settings, "DEFAULT_HTTP_PROTOCOL", "http")
-    current_site = Site.objects.get_current()
+    current_site = unicode(Site.objects.get_current())
 
-    notices_url = u"%s://%s%s" % (
+    absolute_uri = "%s://%s" % (
         protocol,
-        unicode(current_site),
+        current_site)
+
+    notices_url = u"%s%s" % (
+        absolute_uri,
         reverse("notification_notices"),
     )
 
@@ -301,6 +304,7 @@ def send_now(users, label, extra_context=None, on_site=True, sender=None):
             "notice": ugettext(notice_type.display),
             "notices_url": notices_url,
             "current_site": current_site,
+            "absolute_uri": absolute_uri,
         })
         context.update(extra_context)
 
