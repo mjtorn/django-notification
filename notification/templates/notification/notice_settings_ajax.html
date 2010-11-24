@@ -3,7 +3,7 @@
 <div class="notice_settings">
   <h2>{% trans "Settings" %}</h2>
   
-  {% url acct_email as email_url %}
+  {% url acct as email_url %}
   {% if user.email %}
   <p>
     {% trans "Primary email" %}:<br />
@@ -13,7 +13,8 @@
   {% else %}
   <p>
     <span class="warning">{% trans "Note" %}</span>:
-    {% blocktrans %}You do not have a verified email address to which notices can be sent. You can add one by going to <a href="{{ email_url }}">Account</a>.{% endblocktrans %}
+    {% blocktrans %}You do not have a verified email address to which notices
+    can be sent. You can add one by going to <a href="{{ email_url }}">Account</a>.{% endblocktrans %}
   </p>
   {% endif %}
   

@@ -10,7 +10,6 @@
 <h1>{% trans "Notices" %}</h1>
 
 {% if notices %}
-<a href="{% url notification_mark_all_seen %}">{% trans "Mark all unseen notices seen" %}</a>
 
 {% autopaginate notices %}
 {% regroup notices by added.date as notices_by_date %}
