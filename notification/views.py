@@ -24,13 +24,11 @@ def feed_for_user(request):
 
 @login_required
 def notices(request,
-            template_name='notification/notices.html',
-            template_name_ajax='notification/notices_ajax.html'):
+            template_name='notification/notices.html'):
     """
     The main notices index view.
     
     Template: :template:`notification/notices.html`
-    AJAX Template: :template:`notification/notices_ajax.html`
     
     Context:
     
@@ -38,9 +36,6 @@ def notices(request,
             A list of :model:`notification.Notice` objects that are not archived
             and to be displayed on the site.
     """
-    if(request.is_ajax()):
-        template_name = template_name_ajax
-
     notices = Notice.objects.notices_for(request.user, on_site=True)
     
     return render_to_response(template_name, {
