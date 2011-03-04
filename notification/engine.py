@@ -19,6 +19,8 @@ from lockfile import FileLock, AlreadyLocked, LockTimeout
 from notification.models import NoticeQueueBatch
 from notification import models as notification
 
+logger = logging.getLogger(__name__)
+
 # lock timeout value. how long to wait for the lock to become available.
 # default behavior is to never wait for the lock to be available.
 LOCK_WAIT_TIMEOUT = getattr(settings, "NOTIFICATION_LOCK_WAIT_TIMEOUT", -1)
@@ -26,16 +28,16 @@ LOCK_WAIT_TIMEOUT = getattr(settings, "NOTIFICATION_LOCK_WAIT_TIMEOUT", -1)
 def send_all():
     lock = FileLock("send_notices")
 
-    logging.debug("acquiring lock...")
+    logger.debug("acquiring lock...")
     try:
         lock.acquire(LOCK_WAIT_TIMEOUT)
     except AlreadyLocked:
-        logging.debug("lock already in place. quitting.")
+        logger.debug("lock already in place. quitting.")
         return
     except LockTimeout:
-        logging.debug("waiting for the lock timed out. quitting.")
+        logger.debug("waiting for the lock timed out. quitting.")
         return
-    logging.debug("acquired.")
+    logger.debug("acquired.")
 
     batches, sent = 0, 0
     start_time = time.time()
@@ -48,13 +50,13 @@ def send_all():
                 for user, label, extra_context, on_site, sender in notices:
                     try:
                         user = User.objects.get(pk=user)
-                        logging.info("emitting notice %s to %s" % (label, user))
+                        logger.info("emitting notice %s to %s" % (label, user))
                         # call this once per user to be atomic and allow for logging to
                         # accurately show how long each takes.
                         notification.send_now([user], label, extra_context, on_site, sender)
                     except User.DoesNotExist:
                         # Ignore deleted users, just warn about them
-                        logging.warning("not emitting notice %s to user %s since it does not exist" % (label, user))
+                        logger.warning("not emitting notice %s to user %s since it does not exist" % (label, user))
                     sent += 1
                 queued_batch.delete()
                 batches += 1
@@ -67,12 +69,12 @@ def send_all():
             message = "%s" % ("\n".join(traceback.format_exception(*sys.exc_info())),)
             mail_admins(subject, message, fail_silently=True)
             # log it as critical
-            logging.critical("an exception occurred: %r" % e)
+            logger.critical("an exception occurred: %r" % e)
     finally:
-        logging.debug("releasing lock...")
+        logger.debug("releasing lock...")
         lock.release()
-        logging.debug("released.")
+        logger.debug("released.")
     
-    logging.info("")
-    logging.info("%s batches, %s sent" % (batches, sent,))
-    logging.info("done in %.2f seconds" % (time.time() - start_time))
+    logger.info("")
+    logger.info("%s batches, %s sent" % (batches, sent,))
+    logger.info("done in %.2f seconds" % (time.time() - start_time))
