@@ -24,7 +24,10 @@ from django.contrib.contenttypes import generic
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext, get_language, activate
 
-from mailer import send_mail
+try:
+    from mailer import send_mail
+except ImportError:
+    from django.core.mail import send_mail
 
 QUEUE_ALL = getattr(settings, "NOTIFICATION_QUEUE_ALL", False)
 
