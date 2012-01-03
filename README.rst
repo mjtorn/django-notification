@@ -38,3 +38,6 @@ which depends on ``pytz``.
 Do note they extend a template called ``site_base.html``
 so have that available as well.
 
+Creating your own templates is recommended, all the views
+take ``template_name`` as a parameter.
+
