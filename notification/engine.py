@@ -29,7 +29,7 @@ def send_all():
     lock = FileLock("send_notices")
 
     logger.debug("acquiring lock...")
-    
+
     try:
         lock.acquire(LOCK_WAIT_TIMEOUT)
     except AlreadyLocked:
@@ -43,7 +43,7 @@ def send_all():
 
     batches, sent = 0, 0
     start_time = time.time()
-    
+
     try:
         # nesting the try statement to be Python 2.4
         try:
@@ -76,7 +76,7 @@ def send_all():
         logger.debug("releasing lock...")
         lock.release()
         logger.debug("released.")
-    
+
     logger.info("")
     logger.info("%s batches, %s sent" % (batches, sent,))
     logger.info("done in %.2f seconds" % (time.time() - start_time))

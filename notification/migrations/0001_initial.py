@@ -7,7 +7,7 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        
+
         # Adding model 'NoticeType'
         db.create_table('notification_noticetype', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
@@ -66,7 +66,7 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
-        
+
         # Removing unique constraint on 'NoticeSetting', fields ['user', 'notice_type', 'medium']
         db.delete_unique('notification_noticesetting', ['user_id', 'notice_type_id', 'medium'])
 
