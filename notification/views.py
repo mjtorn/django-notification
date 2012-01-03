@@ -1,9 +1,9 @@
 from django.shortcuts import get_object_or_404
-from django.http import Http404
-from django.shortcuts import redirect, render
-
+from django.shortcuts import redirect, render_to_response
+from django.http import HttpResponseRedirect, Http404
 from django.contrib.auth.decorators import login_required
 from django.contrib.syndication.views import feed
+from django.contrib import messages
 
 from notification.models import *
 from notification.decorators import basic_auth_required, simple_basic_auth_callback
@@ -22,7 +22,8 @@ def feed_for_user(request):
 
 
 @login_required
-def notices(request):
+def notices(request,
+            template_name='notification/notices.html'):
     """
     The main notices index view.
     
@@ -35,13 +36,15 @@ def notices(request):
             and to be displayed on the site.
     """
     notices = Notice.objects.notices_for(request.user, on_site=True)
-    return render(request, "notification/notices.html",{
+    
+    return render_to_response(template_name, {
         "notices": notices,
     })
 
-
 @login_required
-def notice_settings(request):
+def notice_settings(request,
+                    template_name='notification/notice_settings.html',
+                    template_name_ajax='notification/notice_settings_ajax.html'):
     """
     The notice settings view.
     
@@ -60,6 +63,9 @@ def notice_settings(request):
             value is ``True`` or ``False`` depending on a ``request.POST``
             variable called ``form_label``, whose valid value is ``on``.
     """
+    if request.is_ajax():
+        template_name = template_name_ajax
+
     notice_types = NoticeType.objects.all()
     settings_table = []
     for notice_type in notice_types:
@@ -79,15 +85,17 @@ def notice_settings(request):
             settings_row.append((form_label, setting.send))
         settings_table.append({"notice_type": notice_type, "cells": settings_row})
     
-    if request.method == "POST":
-        next_page = request.POST.get("next_page", ".")
-        return redirect(next_page)
-    
+    if(request.method == "POST" and
+       request.REQUEST.has_key('next')):
+        messages.add_message(request, messages.INFO, "Your notification settings have been saved.")
+        return HttpResponseRedirect(request.REQUEST['next'])
+
     notice_settings = {
         "column_headers": [medium_display for medium_id, medium_display in NOTICE_MEDIA],
         "rows": settings_table,
     }
-    return render(request, "notification/notice_settings.html", {
+    
+    return render_to_response(template_name, {
         "notice_types": notice_types,
         "notice_settings": notice_settings,
     })
@@ -181,15 +189,20 @@ def delete(request, noticeid=None, next_page=None):
 
 
 @login_required
-def mark_all_seen(request):
+def mark_all_seen(request, success_url=None):
     """
     Mark all unseen notices for the requesting user as seen.  Returns a
     ``redirect`` when complete. 
     """
     
+    if success_url is None:
+        success_url = reverse("notification_notices")
+    if request.GET.has_key("next"):
+        success_url = request.GET['next']
+
     for notice in Notice.objects.notices_for(request.user, unseen=True):
         notice.unseen = False
         notice.save()
 
-    return redirect("notification_notices")
+    return HttpResponseRedirect(success_url)
 

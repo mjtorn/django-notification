@@ -9,7 +9,6 @@ from django.db import models
 from django.db.models.query import QuerySet
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.template import Context
 from django.template.loader import render_to_string
@@ -21,6 +20,11 @@ from django.contrib.auth.models import User
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
+
+from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext, get_language, activate
+
+from mailer import send_mail
 
 QUEUE_ALL = getattr(settings, "NOTIFICATION_QUEUE_ALL", False)
 
@@ -268,11 +272,14 @@ def send_now(users, label, extra_context=None, on_site=True, sender=None):
     notice_type = NoticeType.objects.get(label=label)
     
     protocol = getattr(settings, "DEFAULT_HTTP_PROTOCOL", "http")
-    current_site = Site.objects.get_current()
-    
-    notices_url = u"%s://%s%s" % (
+    current_site = unicode(Site.objects.get_current())
+
+    absolute_uri = "%s://%s" % (
         protocol,
-        unicode(current_site),
+        current_site)
+
+    notices_url = u"%s%s" % (
+        absolute_uri,
         reverse("notification_notices"),
     )
     
@@ -305,6 +312,7 @@ def send_now(users, label, extra_context=None, on_site=True, sender=None):
             "notice": ugettext(notice_type.display),
             "notices_url": notices_url,
             "current_site": current_site,
+            "absolute_uri": absolute_uri,
         })
         context.update(extra_context)
         

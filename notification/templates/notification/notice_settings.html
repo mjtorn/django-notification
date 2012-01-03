@@ -1,0 +1,11 @@
+{% extends "notification/base.html" %}
+
+{% load humanize i18n %}
+
+{% block head_title %}{% trans "Notices" %}{% endblock %}
+
+{% block body %}
+<h1>{% trans "Notices" %}</h1>
+
+{% include "notification/notice_settings_ajax.html" %}
+{% endblock %}
