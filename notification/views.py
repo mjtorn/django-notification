@@ -4,6 +4,7 @@ from django.http import HttpResponseRedirect, Http404
 from django.contrib.auth.decorators import login_required
 from django.contrib.syndication.views import feed
 from django.contrib import messages
+from django.template import RequestContext
 
 from notification.models import *
 from notification.decorators import basic_auth_required, simple_basic_auth_callback
@@ -95,10 +96,13 @@ def notice_settings(request,
         "rows": settings_table,
     }
 
-    return render_to_response(template_name, {
+    context = {
         "notice_types": notice_types,
         "notice_settings": notice_settings,
-    })
+    }
+    req_ctx = RequestContext(request, context)
+
+    return render_to_response(template_name, req_ctx)
 
 
 @login_required
