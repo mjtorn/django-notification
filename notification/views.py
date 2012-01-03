@@ -106,7 +106,7 @@ def notice_settings(request,
 
 
 @login_required
-def single(request, id, mark_seen=True):
+def single(request, id, mark_seen=True, template_name='notification/notice_settings.html'):
     """
     Detail view for a single :model:`notification.Notice`.
 
@@ -128,7 +128,7 @@ def single(request, id, mark_seen=True):
         if mark_seen and notice.unseen:
             notice.unseen = False
             notice.save()
-        return render(request, "notification/single.html", {
+        return render(request, template_name, {
             "notice": notice,
         })
     raise Http404
