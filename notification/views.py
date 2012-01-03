@@ -38,9 +38,12 @@ def notices(request,
     """
     notices = Notice.objects.notices_for(request.user, on_site=True)
 
-    return render_to_response(template_name, {
-        "notices": notices,
-    })
+    context = {
+        'notices': notices
+    }
+    req_ctx = RequestContext(request, context)
+
+    return render_to_response(template_name, req_ctx)
 
 @login_required
 def notice_settings(request,
