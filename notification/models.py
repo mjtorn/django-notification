@@ -361,6 +361,25 @@ def send(*args, **kwargs):
         else:
             return send_now(*args, **kwargs)
 
+class INotice(object):
+    """Mixin for notifications
+    """
+
+    def notify_user(self, user, message, extra_context=None, on_site=True, sender=None):
+        """Notify a ``user`` about this object. Mix this into your model.
+        """
+
+        class_name = self.__class__.__name__.lower()
+
+        ctx = {
+            'notice': message
+        }
+        
+        if extra_context is not None:
+            ctx.update(extra_context)
+
+        send_now((user,), class_name, extra_context=ctx, on_site=on_site, sender=sender)
+
 
 def queue(users, label, extra_context=None, on_site=True, sender=None):
     """
