@@ -380,6 +380,21 @@ class INotice(object):
 
         send_now((user,), class_name, extra_context=ctx, on_site=on_site, sender=sender)
 
+    def notify_users(self, users, message, extra_context=None, on_site=True, sender=None):
+        """Notify the ``users`` about this object.
+        """
+
+        class_name = self.__class__.__name__.lower()
+
+        ctx = {
+            'notice': message
+        }
+        
+        if extra_context is not None:
+            ctx.update(extra_context)
+
+        send_now(users, class_name, extra_context=ctx, on_site=on_site, sender=sender)
+
 
 def queue(users, label, extra_context=None, on_site=True, sender=None):
     """
