@@ -365,11 +365,12 @@ class INotice(object):
     """Mixin for notifications
     """
 
-    def notify_user(self, user, message, extra_context=None, on_site=True, sender=None):
-        """Notify a ``user`` about this object. Mix this into your model.
+    def notify_user(self, user, message, extra_context=None, on_site=True, sender=None, label=None):
+        """Notify a ``user`` about this object. Given no ``label``, the class name is used.
         """
 
-        class_name = self.__class__.__name__.lower()
+        if label is None:
+            label = self.__class__.__name__.lower()
 
         ctx = {
             'notice': message
@@ -378,13 +379,14 @@ class INotice(object):
         if extra_context is not None:
             ctx.update(extra_context)
 
-        send_now((user,), class_name, extra_context=ctx, on_site=on_site, sender=sender)
+        send_now((user,), label, extra_context=ctx, on_site=on_site, sender=sender)
 
-    def notify_users(self, users, message, extra_context=None, on_site=True, sender=None):
-        """Notify the ``users`` about this object.
+    def notify_users(self, users, message, extra_context=None, on_site=True, sender=None, label=None):
+        """Notify the ``users`` about this object. Given no ``label``, the class name is used.
         """
 
-        class_name = self.__class__.__name__.lower()
+        if label is None:
+            label = self.__class__.__name__.lower()
 
         ctx = {
             'notice': message
@@ -393,7 +395,7 @@ class INotice(object):
         if extra_context is not None:
             ctx.update(extra_context)
 
-        send_now(users, class_name, extra_context=ctx, on_site=on_site, sender=sender)
+        send_now(users, label, extra_context=ctx, on_site=on_site, sender=sender)
 
 
 def queue(users, label, extra_context=None, on_site=True, sender=None):
