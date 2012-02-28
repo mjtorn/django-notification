@@ -255,7 +255,7 @@ def get_formatted_messages(formats, label, context):
     return format_templates
 
 
-def send_now(users, label, extra_context=None, on_site=True, sender=None):
+def send_now(users, label, extra_context=None, on_site=True, sender=None, show_to_sender=True):
     """
     Creates a new notice.
 
@@ -268,6 +268,9 @@ def send_now(users, label, extra_context=None, on_site=True, sender=None):
 
     You can pass in on_site=False to prevent the notice emitted from being
     displayed on the site.
+
+
+    By default the sender sees his own notifications, override with show_to_sender=False
     """
     if extra_context is None:
         extra_context = {}
@@ -331,11 +334,22 @@ def send_now(users, label, extra_context=None, on_site=True, sender=None):
             "message": messages["full.txt"],
         }, context)
 
-        notice = Notice.objects.create(recipient=user, message=messages["notice.html"],
-            notice_type=notice_type, on_site=on_site, sender=sender)
-        if should_send(user, notice_type, "1") and user.email and user.is_active: # Email
-            recipients.append(user.email)
-        send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, recipients)
+        notice_kwargs = {
+            'recipient': user,
+            'message': messages['notice.html'],
+            'notice_type': notice_type,
+            'on_site': on_site,
+            'sender': sender,
+            'unseen': True,
+        }
+        if sender is not None and user == sender and show_to_sender is False:
+            notice_kwargs['unseen'] = False
+
+        notice = Notice.objects.create(**notice_kwargs)
+        if notice_kwargs['unseen'] is False:
+            if should_send(user, notice_type, "1") and user.email and user.is_active: # Email
+                recipients.append(user.email)
+            send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, recipients)
 
     # reset environment to original language
     activate(current_language)
@@ -365,7 +379,7 @@ class INotice(object):
     """Mixin for notifications
     """
 
-    def notify_user(self, user, message, extra_context=None, on_site=True, sender=None, label=None):
+    def notify_user(self, user, message, extra_context=None, on_site=True, sender=None, label=None, show_to_sender=True):
         """Notify a ``user`` about this object. Given no ``label``, the class name is used.
         """
 
@@ -379,9 +393,9 @@ class INotice(object):
         if extra_context is not None:
             ctx.update(extra_context)
 
-        send_now((user,), label, extra_context=ctx, on_site=on_site, sender=sender)
+        send_now((user,), label, extra_context=ctx, on_site=on_site, sender=sender, show_to_sender=show_to_sender)
 
-    def notify_users(self, users, message, extra_context=None, on_site=True, sender=None, label=None):
+    def notify_users(self, users, message, extra_context=None, on_site=True, sender=None, label=None, show_to_sender=True):
         """Notify the ``users`` about this object. Given no ``label``, the class name is used.
         """
 
@@ -395,7 +409,7 @@ class INotice(object):
         if extra_context is not None:
             ctx.update(extra_context)
 
-        send_now(users, label, extra_context=ctx, on_site=on_site, sender=sender)
+        send_now(users, label, extra_context=ctx, on_site=on_site, sender=sender, show_to_sender=show_to_sender)
 
 
 def queue(users, label, extra_context=None, on_site=True, sender=None):
